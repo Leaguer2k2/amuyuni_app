@@ -61,6 +61,13 @@ class ChangeNotifierProvider extends StatefulWidget {
         .state;
     return state;
   }
+
+  static GameState read(BuildContext context) {
+    final state = context
+        .getInheritedWidgetOfExactType<_InheritedGameState>()!
+        .state;
+    return state;
+  }
 }
 
 class _ChangeNotifierProviderState extends State<ChangeNotifierProvider> {

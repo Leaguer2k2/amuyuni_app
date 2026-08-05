@@ -50,32 +50,31 @@ class _AndeanGameButtonState extends State<AndeanGameButton> {
               widget.onPressed?.call();
             },
       onTapCancel: disabled ? null : () => setState(() => _isPressed = false),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 80),
-        height: widget.height,
+      child: AnimatedScale(
+        scale: _isPressed ? 0.95 : 1.0,
+        duration: const Duration(milliseconds: 120),
+        curve: Curves.easeOutBack,
+        child: Container(
+          height: widget.height,
         margin: EdgeInsets.only(
           top: _isPressed ? (_darkColor == _effectiveColor ? 2 : 4) : 0,
         ),
-        decoration: BoxDecoration(
-          color: disabled
-              ? AndeanColors.greyCool.withValues(alpha: 0.3)
-              : _effectiveColor,
-          borderRadius: BorderRadius.circular(widget.borderRadius),
-          border: Border(
-            bottom: BorderSide(
-              color: disabled
-                  ? Colors.transparent
-                  : _isPressed
-                      ? Colors.transparent
-                      : _darkColor,
-              width: _isPressed ? 0 : 4,
-            ),
-          ),
-          boxShadow: disabled
-              ? []
-              : _isPressed
-                  ? []
-                  : AndeanColors.buttonShadow,
+          decoration: BoxDecoration(
+            color: disabled
+                ? AndeanColors.greyCool.withValues(alpha: 0.3)
+                : _effectiveColor,
+            borderRadius: BorderRadius.circular(widget.borderRadius),
+            border: Border(
+                bottom: BorderSide(
+                  color: disabled || _isPressed ? Colors.transparent : _darkColor,
+                  width: 4,
+                ),
+              ),
+            boxShadow: disabled
+                ? []
+                : _isPressed
+                    ? []
+                    : AndeanColors.buttonShadow,
         ),
         child: Center(
           child: Row(
@@ -107,6 +106,7 @@ class _AndeanGameButtonState extends State<AndeanGameButton> {
               ),
             ],
           ),
+        ),
         ),
       ),
     );
@@ -236,8 +236,7 @@ class AndeanCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final card = AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
+    final card = Container(
       padding: padding,
       decoration: BoxDecoration(
         color: gradient == null ? (color ?? AndeanColors.surface) : null,
@@ -386,6 +385,153 @@ class AndeanProgressBar extends StatelessWidget {
           );
         },
       ),
+    );
+  }
+}
+
+class StaggeredEntrance extends StatefulWidget {
+  final List<Widget> children;
+  final Duration baseDelay;
+
+  const StaggeredEntrance({
+    super.key,
+    required this.children,
+    this.baseDelay = const Duration(milliseconds: 60),
+  });
+
+  @override
+  State<StaggeredEntrance> createState() => _StaggeredEntranceState();
+}
+
+class _StaggeredEntranceState extends State<StaggeredEntrance>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: Duration(
+        milliseconds: 500 + (widget.children.length * 80),
+      ),
+    );
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.stop();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: List.generate(widget.children.length, (index) {
+        final startDelay = index * widget.baseDelay.inMilliseconds / 1000.0;
+        final animStart = (startDelay / _controller.duration!.inMilliseconds * 1000.0).clamp(0.0, 1.0);
+        final animEnd = ((startDelay + 0.4) / _controller.duration!.inMilliseconds * 1000.0).clamp(0.0, 1.0);
+
+        return AnimatedBuilder(
+          animation: _controller,
+          builder: (context, child) {
+            final t = _controller.value;
+            if (t < animStart) return const SizedBox.shrink();
+            final localT = ((t - animStart) / (animEnd - animStart)).clamp(0.0, 1.0);
+            final curvedT = Curves.easeOutCubic.transform(localT);
+            return Opacity(
+              opacity: curvedT,
+              child: Transform.translate(
+                offset: Offset(0, 30 * (1 - curvedT)),
+                child: widget.children[index],
+              ),
+            );
+          },
+          child: widget.children[index],
+        );
+      }),
+    );
+  }
+}
+
+class AnimatedBadge extends StatefulWidget {
+  final Widget child;
+  final bool isUnlocked;
+  final bool justUnlocked;
+
+  const AnimatedBadge({
+    super.key,
+    required this.child,
+    required this.isUnlocked,
+    this.justUnlocked = false,
+  });
+
+  @override
+  State<AnimatedBadge> createState() => _AnimatedBadgeState();
+}
+
+class _AnimatedBadgeState extends State<AnimatedBadge>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _pulse;
+  bool _wasJustUnlocked = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _wasJustUnlocked = widget.justUnlocked;
+    _pulse = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    );
+    if (widget.isUnlocked && widget.justUnlocked) {
+      _pulse.repeat(reverse: true);
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant AnimatedBadge oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!_wasJustUnlocked && widget.isUnlocked && widget.justUnlocked) {
+      _wasJustUnlocked = true;
+      _pulse.repeat(reverse: true);
+    }
+  }
+
+  @override
+  void dispose() {
+    _pulse.stop();
+    _pulse.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!widget.isUnlocked || !widget.justUnlocked) {
+      return widget.child;
+    }
+    return AnimatedBuilder(
+      animation: _pulse,
+      builder: (context, child) {
+        final scale = 1.0 + (_pulse.value * 0.06);
+        return Transform.scale(
+          scale: scale,
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(
+                  color: AndeanColors.gold.withValues(alpha: 0.3 * _pulse.value),
+                  blurRadius: 16.0 + (_pulse.value * 8.0),
+                ),
+              ],
+            ),
+            child: child,
+          ),
+        );
+      },
+      child: widget.child,
     );
   }
 }

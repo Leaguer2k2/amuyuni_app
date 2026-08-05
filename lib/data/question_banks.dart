@@ -16,28 +16,8 @@ final List<QuestionModel> node1Questions = [
     options: [
       'Escaneo rápido, total ya estoy con prisa',
       'Verifico el nombre del destinatario en la app y pregunto si ese es su nombre real',
-      'Pago en efectivo para evitar problemas técnicos',
-      'Confío plenamente porque la casera es conocida',
-    ],
-    correctAnswer: 1,
-    feedbackCorrect:
-        '¡Bien hecho! Tiwula dice: Los QR falsos pegados sobre los originales redirigen el pago a otra cuenta. Siempre verifica que el nombre del destinatario sea el de la persona que te está cobrando.',
-    feedbackWrong:
-        '¡Cuidado! Es una técnica común en mercados: pegan un QR falso sobre el original. Tu pago iría al estafador. Siempre revisa el nombre del destinatario.',
-    lupaHint:
-        'Observa si el sticker del QR está intacto o parece tener capas pegadas. Revisa el nombre en la app antes de confirmar.',
-    audioPrompt: 'Revisa siempre el nombre del destinatario antes de pagar con QR',
-  ),
-  QuestionModel(
-    id: 'n1q2',
-    type: QuestionType.multipleChoice,
-    question:
-        'Recibes un SMS: "Banco Unión: Su cuenta fue BLOQUEADA por actividad sospechosa. Desbloquéela inmediatamente en: www.banco-union-seguro.com". ¿Qué haces?',
-    options: [
-      'Entro al enlace y pongo mis datos para desbloquear mi cuenta',
-      'Llamo al número oficial del Banco Unión que aparece en mi tarjeta para verificar',
-      'Respondo el SMS pidiendo más información',
-      'Reenvío el mensaje a mis familiares por si acaso',
+      'Pago en efectivo para evitar riesgos con el QR',
+      'Confío porque el letrero del puesto tiene el logo de Tigo Money',
     ],
     correctAnswer: 1,
     feedbackCorrect:

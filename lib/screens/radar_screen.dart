@@ -11,11 +11,44 @@ class RadarScreen extends StatefulWidget {
   State<RadarScreen> createState() => _RadarScreenState();
 }
 
-class _RadarScreenState extends State<RadarScreen> {
+class _RadarScreenState extends State<RadarScreen>
+    with SingleTickerProviderStateMixin {
   final TextEditingController _linkController = TextEditingController();
   final TextEditingController _reportController = TextEditingController();
   String? _analysisResult;
   bool _analyzing = false;
+  late final AnimationController _staggerController;
+
+  @override
+  void initState() {
+    super.initState();
+    _staggerController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+    _staggerController.forward();
+  }
+
+  Widget _stagger(Widget child, int index) {
+    final start = (index * 0.1).clamp(0.0, 1.0);
+    final end = ((index * 0.1) + 0.35).clamp(0.0, 1.0);
+    return AnimatedBuilder(
+      animation: _staggerController,
+      builder: (context, _) {
+        final t = _staggerController.value;
+        if (t < start) return const SizedBox.shrink();
+        final lt = ((t - start) / (end - start)).clamp(0.0, 1.0);
+        final curved = Curves.easeOutCubic.transform(lt);
+        return Opacity(
+          opacity: curved,
+          child: Transform.translate(
+            offset: Offset(0, 20 * (1 - curved)),
+            child: child,
+          ),
+        );
+      },
+    );
+  }
 
   final List<Map<String, String>> _reports = [
     {'title': '💸 Falso bono 500 Bs', 'detail': 'entel-bonos.com circula por WhatsApp. 47 reportes.', 'time': '10 min', 'severity': 'alta'},
@@ -70,15 +103,15 @@ class _RadarScreenState extends State<RadarScreen> {
             children: [
               _buildHeader(),
               const SizedBox(height: 20),
-              _buildAlertBanner(),
+              _stagger(_buildAlertBanner(), 0),
               const SizedBox(height: 24),
-              _buildLinkChecker(game),
+              _stagger(_buildLinkChecker(game), 1),
               if (_analysisResult != null) ...[
                 const SizedBox(height: 12),
-                _buildAnalysisResult(),
+                _stagger(_buildAnalysisResult(), 2),
               ],
               const SizedBox(height: 24),
-              _buildReportsList(),
+              _stagger(_buildReportsList(), _analysisResult != null ? 3 : 2),
               const SizedBox(height: 20),
             ],
           ),
@@ -487,6 +520,8 @@ class _RadarScreenState extends State<RadarScreen> {
   void dispose() {
     _linkController.dispose();
     _reportController.dispose();
+    _staggerController.stop();
+    _staggerController.dispose();
     super.dispose();
   }
 }

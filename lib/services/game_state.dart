@@ -9,7 +9,7 @@ class GameState extends ChangeNotifier {
   final int _maxLives = 3;
   int _points = 120;
 
-  int _unlockedNodes = 2;
+  int _unlockedNodes = 4;
 
   final Map<int, int> _nodeProgress = {0: 0, 1: 0, 2: 0, 3: 0};
   final Map<int, int> _nodeCorrect = {0: 0, 1: 0, 2: 0, 3: 0};

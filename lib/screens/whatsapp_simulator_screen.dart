@@ -23,9 +23,15 @@ class _WhatsAppSimulatorScreenState extends State<WhatsAppSimulatorScreen> {
   late GameState _game;
 
   @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _game = ChangeNotifierProvider.of(context);
+    _game = ChangeNotifierProvider.read(context);
     if (_messages.isEmpty) _loadScenario(0);
   }
 
@@ -55,6 +61,17 @@ class _WhatsAppSimulatorScreenState extends State<WhatsAppSimulatorScreen> {
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeOut,
         );
+      }
+    });
+  }
+
+  void _goHome() {
+    FocusManager.instance.primaryFocus?.unfocus();
+    if (!context.mounted) return;
+    final nav = Navigator.of(context);
+    Future.microtask(() {
+      if (context.mounted) {
+        nav.pop();
       }
     });
   }
@@ -124,7 +141,7 @@ class _WhatsAppSimulatorScreenState extends State<WhatsAppSimulatorScreen> {
               Row(
                 children: [
                   GestureDetector(
-                    onTap: () => Navigator.pop(context),
+                    onTap: _goHome,
                     child: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
@@ -386,7 +403,7 @@ class _WhatsAppSimulatorScreenState extends State<WhatsAppSimulatorScreen> {
                   const SizedBox(height: 10),
                   AndeanGameButton(
                     text: 'VOLVER AL INICIO',
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: _goHome,
                   ),
                 ],
               )

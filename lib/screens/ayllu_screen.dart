@@ -12,9 +12,42 @@ class AylluScreen extends StatefulWidget {
   State<AylluScreen> createState() => _AylluScreenState();
 }
 
-class _AylluScreenState extends State<AylluScreen> {
+class _AylluScreenState extends State<AylluScreen>
+    with SingleTickerProviderStateMixin {
   final TextEditingController _testimonioController = TextEditingController();
   bool _showingTestimonioInput = false;
+  late final AnimationController _staggerController;
+
+  @override
+  void initState() {
+    super.initState();
+    _staggerController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    );
+    _staggerController.forward();
+  }
+
+  Widget _stagger(Widget child, int index) {
+    final start = (index * 0.08).clamp(0.0, 1.0);
+    final end = ((index * 0.08) + 0.35).clamp(0.0, 1.0);
+    return AnimatedBuilder(
+      animation: _staggerController,
+      builder: (context, _) {
+        final t = _staggerController.value;
+        if (t < start) return const SizedBox.shrink();
+        final lt = ((t - start) / (end - start)).clamp(0.0, 1.0);
+        final curved = Curves.easeOutCubic.transform(lt);
+        return Opacity(
+          opacity: curved,
+          child: Transform.translate(
+            offset: Offset(0, 20 * (1 - curved)),
+            child: child,
+          ),
+        );
+      },
+    );
+  }
 
   void _completeMission(GameState game, int index) {
     final challenge = game.challenges[index];
@@ -106,15 +139,15 @@ class _AylluScreenState extends State<AylluScreen> {
             children: [
               _buildHeader(game),
               const SizedBox(height: 20),
-              _buildMissionsSection(game),
+              _stagger(_buildMissionsSection(game), 0),
               const SizedBox(height: 24),
-              _buildImpactSection(game),
+              _stagger(_buildImpactSection(game), 1),
               const SizedBox(height: 24),
-              _buildCommunityBadgesSection(game),
+              _stagger(_buildCommunityBadgesSection(game), 2),
               const SizedBox(height: 24),
-              _buildBadgesSection(game),
+              _stagger(_buildBadgesSection(game), 3),
               const SizedBox(height: 24),
-              _buildTestimonialsSection(game),
+              _stagger(_buildTestimonialsSection(game), 4),
               const SizedBox(height: 32),
             ],
           ),
@@ -729,6 +762,8 @@ class _AylluScreenState extends State<AylluScreen> {
   @override
   void dispose() {
     _testimonioController.dispose();
+    _staggerController.stop();
+    _staggerController.dispose();
     super.dispose();
   }
 }
